@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+		<title>新玩具后台</title>
+		<link rel="stylesheet" href="./stylesheets/page.css" />
+		<script type="text/javascript" src="./javascripts/jquery.min.js" ></script>
+	</head>
+	<body>
+		<div class="left">
+			<div class="bigTitle">新玩具后台</div>
+			<div class="lines">
+				<div onclick="pageClick(this)" class="active userlist"><img src="./images/icon-1.png" />垃圾分类审核与添加</div>
+				<div onclick="pageClick(this)" class="userback"><img src="./images/icon-3.png" />用户反馈信息</div>
+				<div onclick="pageClick(this)" class="subadout"><img src="./images/icon-5.png" />关于我们编辑</div>
+			</div>
+		</div>
+		<div class="top">
+      <div class="leftTiyle" id="flTitle">垃圾分类审核与添加</div>
+		</div>
+		<div class="content">
+      <div class="buylist">
+        <h3 class="buytitle">用户贡献词条：</h3>
+        <div class="addlistpro">
+
+        </div>    
+        <h3 class="buytitle">自建添加词条：</h3>
+        <div class="addlist">
+            <input type="text" placeholder="垃圾名称" class="inlist">
+            <input type="text" placeholder="分类名称" class="inlist">
+            <input type="text" placeholder="垃圾描述" class="inlist">
+            <input type="button" class="subbtn" value="提交">
+        </div>
+      </div>
+      <div class="about" style="display:none">
+          <textarea class="about_text"></textarea>
+          <button class="subsb" type="button">提交修改</button>
+      </div>
+      <div class="userback_div" style="display:none">
+      </div>
+    </div>
+		<div style="text-align:center;">
+    </div>
+    <script>
+      $(document).ready(function(){
+        //用户提交未审核列表
+        $.ajax({
+          url:"https://xinwanju.cn/garbage/getunverifydata",
+          type:"GET",
+          success:function(result){
+            console.log(result.data);
+            for(i=0;i<=result.data.length;i++){
+                $(".addlistpro").append(`
+                  <div class="addlist">
+                      <input type="text" class="inlist" value="${result.data.name[i]}">
+                      <input type="text" class="inlist" value="${result.data.classification[i]}">
+                      <input type="text" class="inlist" value="${result.data.description[i]}">
+                      <input type="text" class="inlist" value="${result.data.classid[i]}">
+                      <input type="button" class="subbtn" value="审核">
+                  </div>
+              `)
+            }
+        }});
+        //用户反馈请求
+        $.ajax({url:"http://localhost:3000/userback",success:function(result){
+            for(let i=0; i<result.list.length; i++){
+              let pjson = JSON.parse(result.list[i]);
+              console.log(pjson.name)
+              $(".userback_div").append(`
+              <p><span>问题描述：${pjson.text}</span> 
+                <span>反馈账户：${pjson.username}</span> 
+              </p><br>
+              `)
+            }
+        }});
+        $(".userlist").click(function(){
+          $(".about").hide();
+          $(".buylist").show();
+          $(".userback_div").hide();
+        });
+        //关于我们数据请求
+        $(".subadout").click(function(){
+          $(".about").show();
+          $(".buylist").hide();
+          $(".userback_div").hide();
+          $.ajax({url:"http://localhost:3000/about",success:function(result){
+            $(".about_text").val(result.text[0].text)
+          }});
+        });
+        //关于我们修改请求
+        $(".subsb").click(function(){
+          let text= $(".about_text").val();
+          $.ajax({
+            url:"http://localhost:3000/aboutadd",  
+            dataType:"json",  
+            data:{"text":text}, 
+            type:"POST", 
+            success:function(req){
+                if(req.res.code == 200){
+                  alert(req.res.msg)
+                }
+            }
+          })
+        })
+        //用户反馈请求
+        $(".userback").click(function(){
+          $(".about").hide();
+          $(".buylist").hide();
+          $(".userback_div").show();
+        });
+      })
+      //列表切换
+      function pageClick(k) {
+          $(k).parent().find("div").removeClass("active");
+          $(k).addClass("active");
+          $("#flTitle").text($(k).text());
+        }
+    </script>
+	</body>
+</html>
